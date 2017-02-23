@@ -26,6 +26,7 @@ namespace HashCode_VideoCache
     {
         public int Id;
         public int Size;
+        public List<Video> videos;
     }
     class Program
     {
@@ -64,13 +65,13 @@ namespace HashCode_VideoCache
 
             for (int i = 0; i < _videos; i++)
             {
-                videos.Add(new Video() {Size= int.Parse(bits[i]) });
+                videos.Add(new Video() { Size = int.Parse(bits[i]) });
             }
 
             //Endpoint
             List<Endpoint> endpoints = new List<Endpoint>(_endpoints);
 
-          
+
 
             for (int i = 0; i < _endpoints; i++)
             {
@@ -96,11 +97,11 @@ namespace HashCode_VideoCache
 
                     endpoint.latencySum = 0;
 
-                    endpoint.CachesLatency.Add(new Tuple<Cache, int>(new Cache() {Id = endpointId, Size=_sizeCache}, latency));
+                    endpoint.CachesLatency.Add(new Tuple<Cache, int>(new Cache() { Id = endpointId, Size = _sizeCache }, latency));
                 }
-               
+
                 endpoints.Add(endpoint);
-                
+
             }
 
             //Requests
@@ -111,7 +112,7 @@ namespace HashCode_VideoCache
                 int videoId = int.Parse(bits[0]);
                 int endpointId = int.Parse(bits[1]);
                 int number = int.Parse(bits[2]);
-                
+
 
                 endpoints[endpointId].VideosRequests.Add(new Tuple<Video, int>(videos[videoId], number));
                 endpoints[endpointId].latencySum += number * endpoints[endpointId].Datacenter;
@@ -128,13 +129,36 @@ namespace HashCode_VideoCache
             endpoints = endpoints.OrderByDescending(o => o.latencySum).ToList();
 
 
-            var endp = endpoints[0];
-            int videoSize = endp.VideosRequests[0].Item1.Size;
-            if (endp.CachesLatency[0].Item1.Size > videoSize)
+            while(endpoints.Count > 0)
             {
-                endp.CachesLatency[0].Item1.Size -= videoSize;
+                var endp = endpoints[0];
+                foreach (var cacheServer in endp.CachesLatency)
+                {
+                    if (cacheServer.Item1.videos.Contains(endp.VideosRequests[0].Item1))
+                    {
+                        endp.latencySum -= (endp.VideosRequests[0].Item2 * (endp.Datacenter - cacheServer.Item2));
+
+                        break;
+                    }
+
+                    int videoSize = endp.VideosRequests[0].Item1.Size;
+                    if (cacheServer.Item1.Size > videoSize)
+                    {
+                        cacheServer.Item1.Size -= videoSize;
+                        cacheServer.Item1.videos.Add(endp.VideosRequests[0].Item1);
+                        endp.latencySum -= (endp.VideosRequests[0].Item2 * (endp.Datacenter - cacheServer.Item2));
+                        break;
+                    }
+
+                }
+
+                endp.VideosRequests.RemoveAt(0);
+                endpoints = endpoints.OrderByDescending(o => o.latencySum).ToList();
+                endpoints.Remove(endp);
 
             }
+
+
 
 
             int a = 10;
