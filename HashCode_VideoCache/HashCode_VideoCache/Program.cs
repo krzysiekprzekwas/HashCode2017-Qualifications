@@ -99,6 +99,7 @@ namespace HashCode_VideoCache
                 int videoId = int.Parse(bits[0]);
                 int endpointId = int.Parse(bits[1]);
                 int number = int.Parse(bits[2]);
+                //dupa
 
                 endpoints[endpointId].VideosRequests.Add(videos[videoId], number);
             }
