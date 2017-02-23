@@ -143,7 +143,7 @@ namespace HashCode_VideoCache
 
             foreach (var endpoint in endpoints)
             {
-                endpoint.VideosRequests = endpoint.VideosRequests.OrderByDescending(o => o.Item2/o.Item1.Size).ToList();
+                endpoint.VideosRequests = endpoint.VideosRequests.OrderByDescending(o => o.Item2/Math.Sqrt(o.Item1.Size)).ToList();
                 endpoint.CachesLatency = endpoint.CachesLatency.OrderBy(o => o.Item2).ToList();
             }
 
@@ -155,24 +155,35 @@ namespace HashCode_VideoCache
             while(endpoints.Count > 0)
             {
                 var endp = endpoints[0];
-                foreach (var cacheServer in endp.CachesLatency)
+
+                int found = 0;
+
+                foreach (var cacheSer in endp.CachesLatency)
                 {
-                    if (cacheServer.Item1.videos.Contains(endp.VideosRequests[0].Item1))
+                    if (cacheSer.Item1.videos.Contains(endp.VideosRequests[0].Item1))
                     {
-                        endp.latencySum -= (endp.VideosRequests[0].Item2 * (endp.Datacenter - cacheServer.Item2));
-
+                        endp.latencySum -= (endp.VideosRequests[0].Item2 * (endp.Datacenter - cacheSer.Item2));
+                        found = 1;
                         break;
                     }
+                }
 
-                    int videoSize = endp.VideosRequests[0].Item1.Size;
-                    if (cacheServer.Item1.Size > videoSize)
+                if (found == 0)
+                {
+                    foreach (var cacheServer in endp.CachesLatency)
                     {
-                        cacheServer.Item1.Size -= videoSize;
-                        cacheServer.Item1.videos.Add(endp.VideosRequests[0].Item1);
-                        endp.latencySum -= (endp.VideosRequests[0].Item2 * (endp.Datacenter - cacheServer.Item2));
-                        break;
-                    }
 
+
+                        int videoSize = endp.VideosRequests[0].Item1.Size;
+                        if (cacheServer.Item1.Size > videoSize)
+                        {
+                            cacheServer.Item1.Size -= videoSize;
+                            cacheServer.Item1.videos.Add(endp.VideosRequests[0].Item1);
+                            endp.latencySum -= (endp.VideosRequests[0].Item2 * (endp.Datacenter - cacheServer.Item2));
+                            break;
+                        }
+
+                    }
                 }
 
                 endp.VideosRequests.RemoveAt(0);
