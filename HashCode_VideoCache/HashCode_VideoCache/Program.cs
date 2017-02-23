@@ -39,12 +39,30 @@ namespace HashCode_VideoCache
         
         static void Main(string[] args)
         {
+            
+            Console.WriteLine("Started");
             TextReader reader = File.OpenText("me_at_the_zoo.in");
-            ReadInputData(reader);
-            int a = 10;
+            ReadInputData(reader, "me_at_the_zoo.out");
+
+            Console.WriteLine("started 2");
+            reader = File.OpenText("kittens.in");
+            ReadInputData(reader, "kittens.out");
+            Console.WriteLine("started 2");
+
+            reader = File.OpenText("trending_today.in");
+            ReadInputData(reader, "trending_today.out");
+            Console.WriteLine("started 2");
+
+            reader = File.OpenText("videos_worth_spreading.in");
+            ReadInputData(reader, "videos_worth_spreading.out");
+
+            Console.WriteLine("started 2");
+            
+            reader = File.OpenText("example.in");
+            ReadInputData(reader, "example.out");
         }
 
-        static public bool ReadInputData(TextReader reader)
+        static public bool ReadInputData(TextReader reader, string output)
         {
             var text = reader.ReadLine();
             if (text == null)
@@ -65,14 +83,18 @@ namespace HashCode_VideoCache
 
             for (int i = 0; i < _videos; i++)
             {
-                videos.Add(new Video() { Size = int.Parse(bits[i]) });
+                videos.Add(new Video() { Id=i, Size = int.Parse(bits[i]) });
             }
 
             //Endpoint
             List<Endpoint> endpoints = new List<Endpoint>(_endpoints);
+            List<Cache> cache = new List<Cache>();
 
 
-
+            for (int i = 0; i < _cache; i++)
+            {
+                cache.Add(new Cache() { Id = i, Size = _sizeCache, videos = new List<Video>() });
+            }
             for (int i = 0; i < _endpoints; i++)
             {
                 text = reader.ReadLine();
@@ -96,8 +118,9 @@ namespace HashCode_VideoCache
                     int latency = int.Parse(bits[1]);
 
                     endpoint.latencySum = 0;
-
-                    endpoint.CachesLatency.Add(new Tuple<Cache, int>(new Cache() { Id = endpointId, Size = _sizeCache }, latency));
+                    //cache.Add();
+                    endpoint.CachesLatency.Add(new Tuple<Cache, int>(cache[endpointId], latency));
+                    
                 }
 
                 endpoints.Add(endpoint);
@@ -111,17 +134,17 @@ namespace HashCode_VideoCache
                 bits = text.Split(' ');
                 int videoId = int.Parse(bits[0]);
                 int endpointId = int.Parse(bits[1]);
-                int number = int.Parse(bits[2]);
+                int numberOfRequests = int.Parse(bits[2]);
 
 
-                endpoints[endpointId].VideosRequests.Add(new Tuple<Video, int>(videos[videoId], number));
-                endpoints[endpointId].latencySum += number * endpoints[endpointId].Datacenter;
+                endpoints[endpointId].VideosRequests.Add(new Tuple<Video, int>(videos[videoId], numberOfRequests));
+                endpoints[endpointId].latencySum += numberOfRequests * endpoints[endpointId].Datacenter;
             }
 
             foreach (var endpoint in endpoints)
             {
                 endpoint.VideosRequests = endpoint.VideosRequests.OrderByDescending(o => o.Item2).ToList();
-                endpoint.CachesLatency = endpoint.CachesLatency.OrderByDescending(o => o.Item2).ToList();
+                endpoint.CachesLatency = endpoint.CachesLatency.OrderBy(o => o.Item2).ToList();
             }
 
 
@@ -153,15 +176,35 @@ namespace HashCode_VideoCache
                 }
 
                 endp.VideosRequests.RemoveAt(0);
+                
+
+                if (endp.VideosRequests.Count == 0)
+                {
+                    endpoints.Remove(endp);
+                }
+
                 endpoints = endpoints.OrderByDescending(o => o.latencySum).ToList();
-                endpoints.Remove(endp);
+
 
             }
+            int cacheListCount = cache.Count(o => o.videos.Count > 0);
 
+            var file = new System.IO.StreamWriter(output);
+            file.WriteLine(cacheListCount);
 
+            foreach (var cacheO in cache.Where(o=>o.videos.Count>0))
+            {
+                string videoss = " ";
+                foreach (var VARIABLE in cacheO.videos)
+                {
+                    videoss += VARIABLE.Id + " ";
+                }
+                file.WriteLine(cacheO.Id + videoss);
+            }
 
+            file.Close();
 
-            int a = 10;
+           
             return true;
         }
     }
