@@ -48,6 +48,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="example.in" />
+    <None Include="kittens.in" />
+    <None Include="me_at_the_zoo.in" />
+    <None Include="trending_today.in" />
+    <None Include="videos_worth_spreading.in" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

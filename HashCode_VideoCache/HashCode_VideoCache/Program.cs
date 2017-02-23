@@ -143,7 +143,7 @@ namespace HashCode_VideoCache
 
             foreach (var endpoint in endpoints)
             {
-                endpoint.VideosRequests = endpoint.VideosRequests.OrderByDescending(o => o.Item2).ToList();
+                endpoint.VideosRequests = endpoint.VideosRequests.OrderByDescending(o => o.Item2/o.Item1.Size).ToList();
                 endpoint.CachesLatency = endpoint.CachesLatency.OrderBy(o => o.Item2).ToList();
             }
 
