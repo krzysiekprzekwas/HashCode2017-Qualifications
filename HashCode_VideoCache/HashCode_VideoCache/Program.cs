@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,10 +16,11 @@ namespace HashCode_VideoCache
     }
     public class Endpoint
     {
+        public int latencySum;
         public int Id;
         public int Datacenter;
-        public Dictionary<Cache,int> CachesLatency; //Cache, latency
-        public Dictionary<Video,int> VideosRequests; //Video, no of requests
+        public List<Tuple<Cache,int>> CachesLatency; //Cache, latency
+        public List<Tuple<Video,int>> VideosRequests; //Video, no of requests
     }
     public class Cache
     {
@@ -26,20 +29,21 @@ namespace HashCode_VideoCache
     }
     class Program
     {
-        private int _videos = 0;
-        private int _endpoints = 0;
-        private int _requests = 0;
-        private int _cache = 0;
-        private int _sizeCache = 0;
+        static private int _videos = 0;
+        static private int _endpoints = 0;
+        static private int _requests = 0;
+        static private int _cache = 0;
+        static private int _sizeCache = 0;
         
         
         static void Main(string[] args)
         {
-            Console.WriteLine("Dupa");
-            Console.WriteLine("Dupa");
-
+            TextReader reader = File.OpenText("me_at_the_zoo.in");
+            ReadInputData(reader);
+            int a = 10;
         }
-        private bool ReadInputData(TextReader reader)
+
+        static public bool ReadInputData(TextReader reader)
         {
             var text = reader.ReadLine();
             if (text == null)
@@ -77,18 +81,26 @@ namespace HashCode_VideoCache
 
                 Endpoint endpoint = new Endpoint();
                 endpoint.Datacenter = datacenter;
+                endpoint.VideosRequests = new List<Tuple<Video, int>>();
 
-                for (int j = 0; j < cacheConnection; i++)
+                endpoint.CachesLatency = new List<Tuple<Cache, int>>();
+
+                for (int j = 0; j < cacheConnection; j++)
                 {
                     text = reader.ReadLine();
+                    //if (text)
                     bits = text.Split(' ');
 
                     int endpointId = int.Parse(bits[0]);
                     int latency = int.Parse(bits[1]);
 
-                    endpoint.CachesLatency.Add(new Cache() {Id = endpointId, Size=_sizeCache}, latency);
+                    endpoint.latencySum = 0;
+
+                    endpoint.CachesLatency.Add(new Tuple<Cache, int>(new Cache() {Id = endpointId, Size=_sizeCache}, latency));
                 }
                
+                endpoints.Add(endpoint);
+                
             }
 
             //Requests
@@ -99,10 +111,33 @@ namespace HashCode_VideoCache
                 int videoId = int.Parse(bits[0]);
                 int endpointId = int.Parse(bits[1]);
                 int number = int.Parse(bits[2]);
-                //dupa
+                
 
-                endpoints[endpointId].VideosRequests.Add(videos[videoId], number);
+                endpoints[endpointId].VideosRequests.Add(new Tuple<Video, int>(videos[videoId], number));
+                endpoints[endpointId].latencySum += number * endpoints[endpointId].Datacenter;
             }
+
+            foreach (var endpoint in endpoints)
+            {
+                endpoint.VideosRequests = endpoint.VideosRequests.OrderByDescending(o => o.Item2).ToList();
+                endpoint.CachesLatency = endpoint.CachesLatency.OrderByDescending(o => o.Item2).ToList();
+            }
+
+
+            // Counting
+            endpoints = endpoints.OrderByDescending(o => o.latencySum).ToList();
+
+
+            var endp = endpoints[0];
+            int videoSize = endp.VideosRequests[0].Item1.Size;
+            if (endp.CachesLatency[0].Item1.Size > videoSize)
+            {
+                endp.CachesLatency[0].Item1.Size -= videoSize;
+
+            }
+
+
+            int a = 10;
             return true;
         }
     }
