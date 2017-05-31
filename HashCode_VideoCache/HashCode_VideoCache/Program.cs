@@ -30,14 +30,13 @@ namespace HashCode_VideoCache
     }
     class Program
     {
-        static private int _videos = 0;
-        static private int _endpoints = 0;
-        static private int _requests = 0;
-        static private int _cache = 0;
-        static private int _sizeCache = 0;
-        
-        
-        static void Main(string[] args)
+        private static int _videos = 0;
+        private static int _endpoints = 0;
+        private static int _requests = 0;
+        private static int _cache = 0;
+        private static int _sizeCache = 0;
+
+        private static void Main(string[] args)
         {
             
             Console.WriteLine("Started");
@@ -62,7 +61,7 @@ namespace HashCode_VideoCache
             ReadInputData(reader, "example.out");
         }
 
-        static public bool ReadInputData(TextReader reader, string output)
+        public static bool ReadInputData(TextReader reader, string output)
         {
             var text = reader.ReadLine();
             if (text == null)
@@ -149,7 +148,7 @@ namespace HashCode_VideoCache
 
 
             // Counting
-            endpoints = endpoints.OrderByDescending(o => o.latencySum).ToList();
+            endpoints = endpoints.OrderByDescending(o => o.VideosRequests.First().Item2).ToList();
 
 
             while(endpoints.Count > 0)
